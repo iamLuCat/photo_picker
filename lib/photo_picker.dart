@@ -1,5 +1,5 @@
 
-import 'package:photo_picker/entity/media.dart';
+import 'package:image_picker_pro_max/entity/media.dart';
 
 import 'photo_picker_platform_interface.dart';
 

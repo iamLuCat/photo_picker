@@ -23,7 +23,7 @@ First, request the correct storage permissions in the Android manifest, dependin
 Request permission to access the gallery:
 
 ```dart
-import 'package:photo_picker/photo_picker.dart';
+import 'package:image_picker_pro_max/photo_picker.dart';
 
 Future<void> pickVideo() async {
   final isGranted = await PhotoPicker.requestPermission();

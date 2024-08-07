@@ -1,7 +1,8 @@
-name: photo_picker
-description: "A new Flutter project."
+name: image_picker_pro_max
+description: "A package that allows you to use the native photo picker on Android"
 version: 0.0.1
-homepage:
+homepage: https://github.com/iamLuCat/photo_picker
+repository: https://github.com/iamLuCat/photo_picker
 
 environment:
   sdk: '>=3.4.0 <4.0.0'

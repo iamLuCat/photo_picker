@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:photo_picker/entity/media.dart';
-import 'package:photo_picker/photo_picker.dart';
-import 'package:photo_picker/photo_picker_platform_interface.dart';
-import 'package:photo_picker/photo_picker_method_channel.dart';
+import 'package:image_picker_pro_max/entity/media.dart';
+import 'package:image_picker_pro_max/photo_picker.dart';
+import 'package:image_picker_pro_max/photo_picker_platform_interface.dart';
+import 'package:image_picker_pro_max/photo_picker_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 class MockPhotoPickerPlatform with MockPlatformInterfaceMixin implements PhotoPickerPlatform {
