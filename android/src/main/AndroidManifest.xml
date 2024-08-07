@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.example.photo_picker">
+    <application>
+        <provider
+            android:name=".VideoPickerFileProvider"
+            android:authorities="${applicationId}.video_picker"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/flutter_image_picker_file_paths" />
+        </provider>
+    </application>
+</manifest>
