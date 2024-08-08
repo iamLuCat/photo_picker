@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:photo_picker/entity/media.dart';
-import 'package:photo_picker/photo_picker.dart';
+import 'package:photo_picker_manager/entity/media.dart';
+import 'package:photo_picker_manager/photo_picker.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,7 +37,7 @@ class _MyAppState extends State<MyApp> {
             children: [
               TextButton(
                   onPressed: () async {
-
+                    PhotoManager.requestPermissionExtend();
                   },
                   child: const Text("Request permission")),
               Text("FILE: ${media.toString()}"),

@@ -1,6 +1,6 @@
-name: image_picker_pro_max
+name: photo_picker_manager
 description: "A package that allows you to use the native photo picker on Android"
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/iamLuCat/photo_picker
 repository: https://github.com/iamLuCat/photo_picker
 

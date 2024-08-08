@@ -10,7 +10,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 
-class FileHandler(private val context: Context) {
+class FileHandlerUtil(private val context: Context) {
 
     private var _result: ResultCallback? = null
 

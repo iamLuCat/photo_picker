@@ -1,24 +1,30 @@
 package com.example.photo_picker
 
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
-import android.Manifest.permission.READ_MEDIA_IMAGES
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.app.Activity
+import android.app.ActivityManager
+import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import com.example.photo_picker.utils.FileHandler
+import androidx.core.content.ContextCompat
+import com.example.photo_picker.utils.FileHandlerUtil
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -34,11 +40,11 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
     PluginRegistry.RequestPermissionsResultListener {
     private lateinit var channel: MethodChannel
     private val REQUEST_CODE_CHOOSE_VIDEO_FROM_GALLERY = 2505
-    private val PERMISSION_REQUEST_CODE = 1
+    private val PERMISSION_REQUEST_CODE = 101010
     private var context: Context? = null
     private var thisActivity: Activity? = null
     private var _result: Result? = null
-    private var _fileHandler: FileHandler? = null
+    private var _fileHandler: FileHandlerUtil? = null
     private var activityBinding: ActivityPluginBinding? = null
 
     private val projection = arrayOf(
@@ -55,7 +61,8 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "photo_picker")
         channel.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext
-        _fileHandler = FileHandler(flutterPluginBinding.applicationContext)
+        _fileHandler = FileHandlerUtil(flutterPluginBinding.applicationContext)
+
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -90,11 +97,14 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
 
     private fun setup(binding: ActivityPluginBinding) {
         activityBinding = binding
+        activityBinding?.lifecycle.let { lifecycle ->
+            Log.i("PhotoPicker", "onAttachedToActivity $lifecycle")
+        }
         binding.addActivityResultListener(this)
         binding.addRequestPermissionsResultListener(this)
         thisActivity = binding.activity
-
     }
+
 
     override fun onDetachedFromActivityForConfigChanges() {
         onDetachedFromActivity()
@@ -114,19 +124,16 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
         this.activityBinding?.removeRequestPermissionsResultListener(this)
         this.activityBinding = null
         channel.setMethodCallHandler(null)
+        thisActivity = null
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ): Boolean {
         when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
                 // If request is cancelled, the result arrays are empty.
-                return if ((grantResults.isNotEmpty() &&
-                            grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                ) {
+                return if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted, yay! Do the
                     Log.d("Permission", "Permission granted")
                     _result?.success(true)
@@ -149,6 +156,7 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
+        Log.i("FLUTTER", data.toString())
         if (requestCode == REQUEST_CODE_CHOOSE_VIDEO_FROM_GALLERY) {
             if (resultCode == Activity.RESULT_OK && data != null) {
                 // get image
@@ -178,7 +186,7 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
         }
         val path = image.path
         if (path.isEmpty()) {
-            _fileHandler?.setResultCallback(object : FileHandler.ResultCallback {
+            _fileHandler?.setResultCallback(object : FileHandlerUtil.ResultCallback {
                 override fun success(path: String) {
                     image.path = path
                     _result?.success(image.toMap())
@@ -205,11 +213,7 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
 
     private fun getImages(contentResolver: ContentResolver, uri: Uri): Media? {
         contentResolver.query(
-            uri,
-            projection,
-            null,
-            null,
-            "${MediaStore.Video.Media.DATE_ADDED} DESC"
+            uri, projection, null, null, "${MediaStore.Video.Media.DATE_ADDED} DESC"
         )?.use { cursor ->
             if (cursor.moveToFirst()) {
                 val media = cursor.toMedia()
@@ -256,24 +260,30 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
     }
 
     private fun requestPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ActivityCompat.requestPermissions(
-                thisActivity!!,
-                arrayOf(READ_MEDIA_VISUAL_USER_SELECTED, READ_MEDIA_IMAGES, READ_MEDIA_VIDEO),
-                PERMISSION_REQUEST_CODE
-            )
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(
-                thisActivity!!,
-                arrayOf(READ_MEDIA_IMAGES, READ_MEDIA_VIDEO),
-                PERMISSION_REQUEST_CODE
-            )
+        val isAboveUpsideDownCake = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+        val isAboveT = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        if (isAboveT && ContextCompat.checkSelfPermission(context!!, READ_MEDIA_VIDEO) == PERMISSION_GRANTED
+        ) {
+            _result?.success(true)
+        } else if (isAboveUpsideDownCake && ContextCompat.checkSelfPermission(
+                context!!,
+                READ_MEDIA_VISUAL_USER_SELECTED
+            ) == PERMISSION_GRANTED
+        ) {
+            _result?.success(true)
+        } else if (ContextCompat.checkSelfPermission(context!!, READ_EXTERNAL_STORAGE) == PERMISSION_GRANTED) {
+            _result?.success(true)
         } else {
-            // Full access up to Android 12 (API level 32)
+            val requestPermissions = mutableListOf<String>()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                requestPermissions.addAll(arrayOf(READ_MEDIA_VIDEO, READ_MEDIA_VISUAL_USER_SELECTED))
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestPermissions.add(READ_MEDIA_VIDEO)
+            } else {
+                requestPermissions.add(READ_EXTERNAL_STORAGE)
+            }
             ActivityCompat.requestPermissions(
-                thisActivity!!,
-                arrayOf(READ_EXTERNAL_STORAGE),
-                PERMISSION_REQUEST_CODE
+                thisActivity!!, requestPermissions.toTypedArray(), PERMISSION_REQUEST_CODE
             )
         }
     }
@@ -282,11 +292,7 @@ class PhotoPickerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler, Plugi
 }
 
 data class Media(
-    var path: String,
-    val name: String,
-    val size: Long,
-    val mimeType: String,
-    val duration: Int
+    var path: String, val name: String, val size: Long, val mimeType: String, val duration: Int
     // to map
 ) {
     fun toMap(): Map<String, Any> {

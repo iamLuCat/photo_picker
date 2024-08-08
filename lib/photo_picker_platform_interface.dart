@@ -1,4 +1,4 @@
-import 'package:image_picker_pro_max/entity/media.dart';
+import 'package:photo_picker_manager/entity/media.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'photo_picker_method_channel.dart';

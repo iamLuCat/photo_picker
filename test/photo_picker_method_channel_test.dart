@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:image_picker_pro_max/photo_picker_method_channel.dart';
+import 'package:photo_picker_manager/photo_picker_method_channel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
