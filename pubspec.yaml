@@ -38,8 +38,8 @@ flutter:
       android:
         package: com.example.photo_picker
         pluginClass: PhotoPickerPlugin
-      ios:
-        pluginClass: PhotoPickerPlugin
+#      ios:
+#        pluginClass: PhotoPickerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
